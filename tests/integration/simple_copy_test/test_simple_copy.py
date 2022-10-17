@@ -34,6 +34,10 @@ class BaseTestSimpleCopy(DBTIntegrationTest):
         cfg.update(extra)
         return cfg
 
+    def seed_and_run(self):
+        self.run_dbt(["seed"])
+        self.run_dbt(["run"])
+
 
 class TestSimpleCopy(BaseTestSimpleCopy):
 
@@ -278,7 +282,7 @@ class TestSnowflakeIncrementalOverwrite(BaseTestSimpleCopy):
 class TestIncrementalMergeColumns(BaseTestSimpleCopy):
     @property
     def models(self):
-        return self.dir("models-merge-update")
+        return self.dir("models-merge-update-cols")
 
     @property
     def project_config(self):
@@ -287,10 +291,6 @@ class TestIncrementalMergeColumns(BaseTestSimpleCopy):
                 "quote_columns": False
             }
         }
-
-    def seed_and_run(self):
-        self.run_dbt(["seed"])
-        self.run_dbt(["run"])
 
     @use_profile("snowflake")
     def test__snowflake__incremental_merge_columns(self):
@@ -309,3 +309,35 @@ class TestIncrementalMergeColumns(BaseTestSimpleCopy):
         })
         self.seed_and_run()
         self.assertTablesEqual("incremental_update_cols", "expected_result")
+
+
+class TestIncrementalMergeCondition(BaseTestSimpleCopy):
+    @property
+    def models(self):
+        return self.dir("models-merge-update-cond")
+
+    @property
+    def project_config(self):
+        return {
+            "seeds": {
+                "quote_columns": False
+            }
+        }
+
+    @use_profile("snowflake")
+    def test__snowflake__incremental_merge_columns(self):
+        self.use_default_project({
+            "seed-paths": ["seeds-merge-cols-initial"],
+            "seeds": {
+                "quote_columns": False
+            }
+        })
+        self.seed_and_run()
+        self.use_default_project({
+            "seed-paths": ["seeds-merge-cond-update"],
+            "seeds": {
+                "quote_columns": False
+            }
+        })
+        self.seed_and_run()
+        self.assertTablesEqual("incremental_update_cond", "expected_result")

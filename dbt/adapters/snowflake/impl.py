@@ -28,6 +28,7 @@ class SnowflakeConfig(AdapterConfig):
     snowflake_warehouse: Optional[str] = None
     query_tag: Optional[str] = None
     merge_update_columns: Optional[str] = None
+    merge_condition: Optional[str] = None
 
 
 class SnowflakeAdapter(SQLAdapter):
